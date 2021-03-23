@@ -1,14 +1,23 @@
-os: linux
-dist: archlinux
-language: C
-services:
-- docker
-
-archlinux:
-  mount:
-  - ~/.pkg-cache:/var/cache/pacman/pkg
-  script:
-  - "makepkg"
+language: c
+compiler: gcc
+before_install:
+  - sudo apt-get update
+  - sudo apt-get -y install libarchive-dev bsdtar git curl
 
 script:
-- "curl -s https://raw.githubusercontent.com/mikkeloscar/arch-travis/master/arch-travis.sh | bash"
+  - git clone git://projects.archlinux.org/pacman.git
+  - cd pacman
+  - ./autogen.sh
+  - ./configure --disable-doc
+  - make
+  - sudo make install
+  - makepkg -s --noconfirm
+
+deploy:
+  provider: releases
+  api_key: '$GITHUB_API_KEY'
+  file_glob: true
+  file: *.pkg*
+  skip_cleanup: true
+  on:
+    tags: true
